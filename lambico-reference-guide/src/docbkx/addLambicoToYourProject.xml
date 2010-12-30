@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright (C) 2009 Lambico Team <lucio.benfante@gmail.com>
+
+    This file is part of Lambico Reference Guide.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
+
+<chapter version="5.0" xml:id="add-lambico-to-your-project"
+    xmlns="http://docbook.org/ns/docbook"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://docbook.org/ns/docbook http://www.docbook.org/xml/5.0/xsd/docbook.xsd
+    http://www.w3.org/1999/xlink http://www.docbook.org/xml/5.0/xsd/xlink.xsd">
+
+    <info>
+        <title>Adding Lambico to your project</title>
+    </info>
+    <para>The starting point for using Lambico is adding it to your
+            development project. In the following sections we will examine how
+            to add Lambico in a Maven based project.
+    </para>
+    <section xml:id="choose-your-lambico">
+        <info>
+            <title>Choose your Lambico</title>
+        </info>
+        <para>Lambico is architected for being introduced in projects using
+        different persistence, IoC and AOP frameworks. So the first thing you have
+        to evaluate is if Lambico is supporting your current combination
+        of frameworks, or if you are confortable to introduce in your project
+        one of the supported combination.
+        </para>
+        <para>At present Lambico is supporting the following combinations:</para>
+        <itemizedlist>
+            <listitem>
+                <para>Spring + Hibernate</para>
+            </listitem>
+        </itemizedlist>
+        <para>More combinations are planned and will be supported
+        in the future. For example, some combination we are planning are Spring + pure JPA,
+        CDI + Hibernate and CDI + pure JPA.
+        If you like to contribute to the development of Lambico for a
+        combination you are interestend in, please go to the
+            <link xlink:href="http://www.lambico.org">Lambico project site</link>.
+        </para>
+    </section>
+    <section xml:id="add-lambico-using-maven">
+        <info>
+            <title>Using Maven</title>
+        </info>
+        <para>If you are using Maven for building your project, you simply need
+        to add a dependency to your 
+            <filename>pom.xml</filename>.
+        </para>
+        <para>At present Lambico is not distributed through a stable release. (but it will be soon)</para>
+        <para>You can pick the latest development release adding the following repository
+        to your 
+            <filename>pom.xml</filename> or to your
+            <filename>settings.xml</filename>.
+            <programlisting><![CDATA[<repository>
+    <id>sonatype-nexus-snapshots</id>
+    <name>Sonatype Nexus snapshot repository</name>
+    <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+    <snapshots><enabled>true</enabled></snapshots>
+</repository>]]></programlisting>
+        </para>
+        <para>
+            Then add the dependency needed for the Lambico combination you choosed:
+            <itemizedlist>
+                <listitem>
+                    <para>Spring + Hibernate:
+                        <programlisting><![CDATA[<dependency>
+    <groupId>org.lambico</groupId>
+    <artifactId>lambico-spring-hibernate</artifactId>
+    <version>1.0-SNAPSHOT</version>
+</dependency>]]></programlisting>
+                    </para>
+                </listitem>
+            </itemizedlist>
+        </para>
+    </section>
+</chapter>

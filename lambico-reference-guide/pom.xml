@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.lambico.doc</groupId>
+    <artifactId>reference-guide</artifactId>
+    <packaging>pom</packaging>
+    <version>1.0-SNAPSHOT</version>
+    <name>Lambico Reference Guide</name>
+    <url>http://www.lambico.org</url>
+    <inceptionYear>2009</inceptionYear>
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <configuration>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>com.mycila.maven-license-plugin</groupId>
+                <artifactId>maven-license-plugin</artifactId>
+                <version>1.5.0</version>
+                <configuration>
+                    <header>${main.basedir}/LICENSE_HEADER</header>
+                    <excludes>
+                        <exclude>target/**</exclude>
+                        <exclude>m2-target/**</exclude>
+                        <exclude>**/*.properties</exclude>
+                        <exclude>LICENSE_HEADER</exclude>
+                        <exclude>nb-configuration.xml</exclude>
+                        <exclude>nbactions.xml</exclude>
+                        <exclude>profiles.xml</exclude>
+                        <exclude>**/*.svg</exclude>
+                        <exclude>**/testdata/UTF8WithPreamble.txt</exclude>
+                        <exclude>**/testdata/UTF8WithoutPreamble.txt</exclude>
+                    </excludes>
+                    <properties>
+                        <name>${project.name}</name>
+                        <year>${project.inceptionYear}</year>
+                        <holder>Lambico Team</holder>
+                        <contact>lucio.benfante@gmail.com</contact>
+                    </properties>
+                    <encoding>UTF-8</encoding>
+                    <mapping>
+                        <yml>SCRIPT_STYLE</yml>
+                        <jspf>DYNASCRIPT_STYLE</jspf>
+                    </mapping>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>com.agilejava.docbkx</groupId>
+                <artifactId>docbkx-maven-plugin</artifactId>
+                <version>2.0.11</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>generate-html</goal>
+                            <goal>generate-pdf</goal>
+                        </goals>
+                        <phase>generate-sources</phase>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>net.sf.docbook</groupId>
+                        <artifactId>docbook-xml</artifactId>
+                        <version>5.0-all</version>
+                        <classifier>resources</classifier>
+                        <type>zip</type>
+                        <scope>runtime</scope>
+                    </dependency>
+                    <dependency>
+                        <groupId>net.sf.docbook</groupId>
+                        <artifactId>docbook-xsl</artifactId>
+                        <version>1.75.2</version>
+                        <type>zip</type>
+                        <classifier>ns-resources</classifier>
+                    </dependency>
+                    <dependency>
+                        <groupId>net.sf.docbook</groupId>
+                        <artifactId>docbook-xsl-saxon</artifactId>
+                        <version>1.0.0</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>net.sf.docbook</groupId>
+                        <artifactId>docbook-xsl-xalan</artifactId>
+                        <version>1.0.0</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>net.sf.xslthl</groupId>
+                        <artifactId>xslthl</artifactId>
+                        <version>2.0.2</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>net.sf.offo</groupId>
+                        <artifactId>fop-hyph</artifactId>
+                        <version>1.2</version>
+                    </dependency>
+
+    <!--
+                    <dependency>
+                        <groupId>org.docbook</groupId>
+                        <artifactId>docbook-xml</artifactId>
+                        <version>4.4</version>
+                        <scope>runtime</scope>
+                    </dependency>
+                    -->
+                </dependencies>
+                <configuration>
+                    <includes>lambico-reference-guide.xml</includes>
+                    <chunkedOutput>true</chunkedOutput>
+                    <htmlStylesheet>css/manual.css</htmlStylesheet>
+                    <xincludeSupported>true</xincludeSupported>
+                    <htmlCustomization>src/docbkx/resources/xsl/html_chunk.xsl</htmlCustomization>
+                    <foCustomization>src/docbkx/resources/xsl/fopdf.xsl</foCustomization>
+                    <highlightSource>1</highlightSource>
+                    <entities>
+                        <entity>
+                            <name>version</name>
+                            <value>${pom.version}</value>
+                        </entity>
+                    </entities>
+                    <postProcess>
+                        <copy todir="target/site/reference">
+                            <fileset dir="target/docbkx">
+                                <include name="**/*.html" />
+                                <include name="**/*.pdf" />
+                            </fileset>
+                        </copy>
+                        <copy todir="target/site/reference/html">
+                            <fileset dir="src/docbkx/resources">
+                                <include name="**/*.css" />
+                                <include name="**/*.png" />
+                                <include name="**/*.gif" />
+                                <include name="**/*.jpg" />
+                            </fileset>
+                        </copy>
+                    </postProcess>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>3.8.1</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <main.basedir>${basedir}</main.basedir>
+        <year>2010</year>
+        <docbook.source>${basedir}/src/docbkx</docbook.source>
+        <netbeans.hint.useExternalMaven>true</netbeans.hint.useExternalMaven>
+        <docbook.target>${basedir}/target/site/guide</docbook.target>
+
+        <!-- NetBeans IDE properties -->
+        <org-netbeans-modules-editor-indent.CodeStyle.usedProfile>project</org-netbeans-modules-editor-indent.CodeStyle.usedProfile>
+        <org-netbeans-modules-editor-indent.CodeStyle.project.spaces-per-tab>4</org-netbeans-modules-editor-indent.CodeStyle.project.spaces-per-tab>
+        <org-netbeans-modules-editor-indent.CodeStyle.project.tab-size>8</org-netbeans-modules-editor-indent.CodeStyle.project.tab-size>
+        <org-netbeans-modules-editor-indent.CodeStyle.project.indent-shift-width>4</org-netbeans-modules-editor-indent.CodeStyle.project.indent-shift-width>
+        <org-netbeans-modules-editor-indent.CodeStyle.project.text-limit-width>100</org-netbeans-modules-editor-indent.CodeStyle.project.text-limit-width>
+        <org-netbeans-modules-editor-indent.CodeStyle.project.expand-tabs>true</org-netbeans-modules-editor-indent.CodeStyle.project.expand-tabs>
+        <org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.wrapBinaryOps>WRAP_IF_LONG</org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.wrapBinaryOps>
+        <org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.wrapExtendsImplementsKeyword>WRAP_IF_LONG</org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.wrapExtendsImplementsKeyword>
+        <org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.wrapAnnotationArgs>WRAP_IF_LONG</org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.wrapAnnotationArgs>
+        <org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.text-limit-width>100</org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.text-limit-width>
+        <org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.wrapTernaryOps>WRAP_IF_LONG</org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.wrapTernaryOps>
+        <org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.wrapMethodParams>WRAP_IF_LONG</org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.wrapMethodParams>
+        <org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.wrapThrowsKeyword>WRAP_IF_LONG</org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.wrapThrowsKeyword>
+        <org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.wrapExtendsImplementsList>WRAP_IF_LONG</org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.wrapExtendsImplementsList>
+        <org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.wrapAssignOps>WRAP_IF_LONG</org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.wrapAssignOps>
+        <org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.tab-size>8</org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.tab-size>
+        <org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.wrapMethodCallArgs>WRAP_IF_LONG</org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.wrapMethodCallArgs>
+        <org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.wrapChainedMethodCalls>WRAP_IF_LONG</org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.wrapChainedMethodCalls>
+        <org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.wrapFor>WRAP_IF_LONG</org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.wrapFor>
+        <org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.wrapArrayInit>WRAP_IF_LONG</org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.wrapArrayInit>
+        <org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.wrapThrowsList>WRAP_IF_LONG</org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.wrapThrowsList>
+
+    </properties>
+    <distributionManagement>
+        <site>
+            <id>lambico-org-repository</id>
+            <url>scp://web3160@doc.lambico.org/home/web/maven2.parancoe.org/repository/sites/lambico/</url>
+        </site>
+    </distributionManagement>
+</project>

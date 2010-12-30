@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright (C) 2009 Lambico Team <lucio.benfante@gmail.com>
+
+    This file is part of Lambico Reference Guide.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
+
+<book version="5.0" xml:id="lambico-reference-guide" xmlns="http://docbook.org/ns/docbook"
+    xmlns:xlink="http://www.w3.org/1999/xlink" 
+    xmlns:xi="http://www.w3.org/2001/XInclude"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://docbook.org/ns/docbook http://www.docbook.org/xml/5.0/xsd/docbook.xsd
+    http://www.w3.org/2001/XInclude http://www.w3.org/2001/XInclude.xsd
+    http://www.w3.org/1999/xlink http://www.docbook.org/xml/5.0/xsd/xlink.xsd">
+    <info>
+        <title>Lambico</title>
+        <subtitle>Reference Guide</subtitle>
+        <authorgroup>
+            <author>
+                <personname>
+                    <firstname>Lucio</firstname>
+                    <surname>Benfante</surname>
+                </personname>
+            </author>
+        </authorgroup>
+        <address>
+            <ulink url="http://www.lambico.org">www.lambico.org</ulink>
+        </address>
+        <releaseinfo>1.x-DRAFT</releaseinfo>
+        <productname>Lambico</productname>
+        <legalnotice>
+            <para>Copyright (C) 2009 Lambico Team &lt;
+                <ulink url="mailto:lucio.benfante@gmail.com">lucio.benfante@gmail.com</ulink>&gt;
+            </para>
+            <para>This file is part of Lambico Reference Guide.</para>
+            <para>Licensed under the Apache License, Version 2.0 (the "License");
+                you may not use this file except in compliance with the License.
+                You may obtain a copy of the License at
+            </para>
+            <para>
+                <ulink url="http://www.apache.org/licenses/LICENSE-2.0">http://www.apache.org/licenses/LICENSE-2.0</ulink>
+            </para>
+            <para>Unless required by applicable law or agreed to in writing, software
+                distributed under the License is distributed on an "AS IS" BASIS,
+                WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+                See the License for the specific language governing permissions and
+                limitations under the License.
+            </para>
+            <para>Copies of this document may be made for your own use and for
+            distribution to others, provided that you do not charge any
+            fee for such copies and further provided that each copy
+            contains this Copyright Notice, whether distributed in print
+            or electronically.
+            </para>
+        </legalnotice>
+    </info>
+    <toc/>
+    <preface xml:id="introduction">
+        <title>Introduction</title>
+        <para>Lambico is a project aiming to simplify the persistence layer
+        of your applications by providing a manner for easily defining
+        the DAOs that manage the data stored in your database.
+        </para>
+        <para>With Lambico you can define the DAOs for your entities just writing
+        their interfaces, with no implementation at all:
+        </para>
+        <programlisting language="java"><![CDATA[@Dao(entity=Person.class)
+public interface PersonDao extends GenericDao<Person, Long> {
+}]]>
+        </programlisting>
+        <para>You don't need to write anything else, your DAO will be instrumented
+        at runtime with all the methods you can expect: read, create, delete,
+        store, findAll, etc.
+        </para>
+        <para>If you need your specific query methods, you can simply add them
+        to your interface. For example:
+        </para>
+        <programlisting language="java"><![CDATA[@Dao(entity=Person.class)
+public interface PersonDao extends GenericDao<Person, Long> {
+  List<Person> findByFirstName(String firstName);
+}]]>
+        </programlisting>
+        <para>The findByFirstName method will be instrumented exactly as you expect,
+        querying the Person entity for all instances having the firstName property
+        equal to the passed parameter.
+        </para>
+        <para>Of course there are other mechanisms for adding to your DAOs exactly the
+        queries you need for them
+        </para>
+    </preface>
+    <part xml:id="getting-started">
+        <title>Getting started</title>
+        <partintro>
+            <para>The starting point for using Lambico is adding it to your
+            development project. In the following sections we will examine how
+            to add Lambico in a Maven based project.</para>
+        </partintro>
+        <xi:include href="addLambicoToYourProject.xml" />
+    </part>
+    <part xml:id="usingLambico">
+        <title>Using Lambico</title>
+        <xi:include href="using-combination-spring-hibernate.xml" />
+    </part>
+</book>

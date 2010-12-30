@@ -1,0 +1,670 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright (C) 2009 Lambico Team <lucio.benfante@gmail.com>
+
+    This file is part of Lambico Reference Guide.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
+
+
+<chapter version="5.0" xml:id="using-combination-spring-hibernate"
+    xmlns="http://docbook.org/ns/docbook"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://docbook.org/ns/docbook http://www.docbook.org/xml/5.0/xsd/docbook.xsd
+    http://www.w3.org/1999/xlink http://www.docbook.org/xml/5.0/xsd/xlink.xsd">
+
+    <info>
+        <title>The Spring+Hibernate combination</title>
+    </info>
+    <section xml:id="spring-hibernate-introduction">
+        <title>Introduction</title>
+
+        <para>This combination is based on Spring IoC, Spring AOP and the Hibernate
+    implementation of the Java Persistence API (JPA).
+        </para>
+
+    </section>
+
+    <section xml:id="spring-hibernate-persistent-entities">
+        <title>Persistent entities</title>
+
+        <para>The recommended method for creating a persistent entity with this combination is
+    to use the JPA annotations. For features not covered by the JPA specification,
+    you can use the Hibernate specific annotations and features. You can read the
+            <link xlink:href="http://annotations.hibernate.org/">Hibernate documentation</link>
+    for a complete reference about the JPA and Hibernate annotations.
+        </para>
+
+        <para>Lambico provides the
+            <code>org.lambico.po.hibernate.EntityBase</code>
+    class, that can be used as the base class for your entities. The features inherited
+    from the
+            <code>EntityBase</code> are:
+        </para>
+
+        <itemizedlist spacing="compact">
+            <listitem>
+                <para>an auto-generated identifier of type
+                    <code>Long</code>;
+                </para>
+            </listitem>
+
+            <listitem>
+                <para>properly defined
+                    <code>hashCode</code> and
+                    <code>equals</code> methods;
+                </para>
+            </listitem>
+
+            <listitem>
+                <para>
+                    <code>toString</code> method, printing the class name and the
+                    identifier of the persistent instance.
+                </para>
+            </listitem>
+        </itemizedlist>
+
+        <para>The following code is an example of defining an entity class extending the
+            <code>EntityBase</code>:
+            <example>
+                <title>The Person entity</title>
+                <programlisting language="java"><![CDATA[package org.lambico.example.consolespringhibernate.po;
+
+import java.util.Date;
+
+import javax.persistence.Entity;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+import org.lambico.po.hibernate.EntityBase;
+
+@Entity
+public class Person extends EntityBase {
+
+    private String firstName;
+    private String lastName;
+    private Date birthDate;
+
+    /** Creates a new instance of Person */
+    public Person() {
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    @Temporal(TemporalType.DATE)
+    public Date getBirthDate() {
+        return birthDate;
+    }
+
+    public void setBirthDate(Date birthDate) {
+        this.birthDate = birthDate;
+    }
+
+}]]></programlisting>
+            </example>
+        </para>
+
+        <para>The entities are auto-discovered using the following tag in
+        your Spring configuration:
+            <programlisting language="xml"><![CDATA[<lambico:discover-persistent-classes basePackage="org.lambico.example.consolespringhibernate.po"/>]]></programlisting>
+        So the only thing you need to do is to add the entities classes in the correct package. No per-class configuration is needed.
+        </para>
+    </section>
+
+    <section xml:id="spring-hibernate-entity-daos">
+        <title>Entity DAOs</title>
+
+        <para>For using the persistent entities you need to write almost no code.
+        Lambico provides a Data Access Object (DAO) layer very powerful and easy to use.
+        </para>
+
+        <section xml:id="spring-hibernate-defining-a-dao">
+            <title>Define a DAO for an entity</title>
+
+            <para>In Lambico the DAOs are not classes, just interfaces, without an
+            explicit implementation. For example, for defining the DAO for the Person
+            entity, you need to write:
+                <example>
+                    <title>The Person DAO</title>
+                    <programlisting language="java"><![CDATA[package org.lambico.example.consolespringhibernate.dao;
+
+import java.util.Date;
+import java.util.List;
+import org.lambico.dao.generic.Dao;
+import org.lambico.dao.generic.GenericDao;
+import org.lambico.example.consolespringhibernate.po.Person;
+
+@Dao(entity = Person.class)
+public interface PersonDao extends GenericDao<Person, Long> {
+}]]></programlisting>
+                </example>
+            The generic parameters of the
+                <classname>GenericDao</classname> interface
+            are the type of the persistent entity, and the type of its identifier.
+            </para>
+            <para>You don't have to write an implementation of this interface.
+            The implementation will be automatically added at runtime through Spring AOP.
+            The current implementation provides the following methods to each DAO:
+                <programlisting language="java"><![CDATA[/**
+ * Read an entity instance with a specified primary key value.
+ *
+ * @param id The value of the primary key.
+ * @return The entity.
+ */
+T read(PK id);
+
+/**
+ * Read an entity instance with a specified primary key value.
+ *
+ * @param id The value of the primary key.
+ * @return The entity.
+ */
+T get(PK id);
+
+/**
+ * Create or update an object.
+ *
+ * @param transientObject The object to persist.
+ */
+void create(T transientObject);
+
+/**
+ * Create or update an object.
+ *
+ * @param transientObject The object to persist.
+ */
+void store(T transientObject);
+
+/**
+ * Remove an object from persistent storage in the database.
+ *
+ * @param  persistentObject The persistent object to delete.
+ */
+void delete(T persistentObject);
+
+/**
+ * Retrieve all the instances of the DAO entity.
+ *
+ * @return All the instances of the DAO entity.
+ */
+List<T> findAll();
+
+/**
+ * Delete all the instances of the DAO entity.
+ *
+ * @return The count of the deleted instances.
+ */
+int deleteAll();
+
+/**
+ * Count all the instances of the DAO entity.
+ *
+ * @return The count of all the instances of the DAO entity.
+ */
+long count();
+
+/**
+ * Rollback the current transaction.
+ */
+void rollBackTransaction();]]></programlisting>
+            Note that even these methods are parametrized with the type of the
+            entity (
+                <code>T</code>) and the type of the entity identifier (
+                <code>PK</code>).
+            So, for example, the 
+                <code>findAll</code> method of the DAO of the
+                <classname>Person</classname>
+            entity doesn't return a generic
+                <classname>List&lt;Object&gt;</classname>, but it can return a
+            more usefull type-checked
+                <classname>List&lt;Person&gt;</classname>.
+            </para>
+            <para>
+                The implementation of the generic DAO for the Spring+Hibernate
+                combination contains some more useful methods:
+                <programlisting language="java"><![CDATA[/**
+ * Search using a set of Criteria.
+ *
+ * @param criterion The set of Criteria.
+ * @return The result of the search with the provided criteria.
+ */
+List<T> searchByCriteria(Criterion... criterion);
+
+/**
+ * Search using a criteria.
+ *
+ * @param criteria The Criteria.
+ * @return The result of the search with the provided criteria.
+ */
+List<T> searchByCriteria(DetachedCriteria criteria);
+
+/**
+ * Search using a criteria with limits.
+ *
+ * @param criteria The Criteria.
+ * @param firstResult The index of the first result.
+ * @param maxResults The max number of returned results.
+ * @return The result of the search with the provided criteria.
+ */
+List<T> searchByCriteria(DetachedCriteria criteria, int firstResult, int maxResults);
+
+/**
+ * Search using a set of Criteria with pagination.
+ *
+ * @param page The requested page index.
+ * @param pageSize The page width, i.e. the max number of elements on each page.
+ * @param criterion The set of Criteria.
+ * @return The result of the search with the provided criteria.
+ */
+Page<T> searchPaginatedByCriteria(int page, int pageSize, Criterion... criterion);
+
+/**
+ * Search using a criteria with pagination.
+ *
+ * @param page The requested page index.
+ * @param pageSize The page width, i.e. the max number of elements on each page.
+ * @param criteria The Criteria.
+ * @return The result of the search with the provided criteria.
+ */
+Page<T> searchPaginatedByCriteria(int page, int pageSize, DetachedCriteria criteria);
+
+/**
+ * Count on the result of a search using a Criteria.
+ *
+ * @param criteria The Criteria.
+ * @return The number of instances in the result.
+ */
+long countByCriteria(DetachedCriteria criteria);
+
+/**
+ * Gets a Spring's Hibernate Template.
+ *
+ * @return A Spring's Hibernate template.
+ */
+HibernateTemplate getHibernateTemplate();]]></programlisting>
+                For accessing these methods you should cast your DAO reference to
+                <code>HibernateGenericDao</code>:
+                <programlisting language="java"><![CDATA[HibernateGenericDao hibernatePersonDao = (HibernateGenericDao)personDao;]]></programlisting>
+            </para>
+            <para>The DAOs are auto-discovered using the following tag in
+        your Spring configuration:
+                <programlisting><![CDATA[<lambico:define-daos baseInterfacePackage="org.lambico.example.consolespringhibernate.dao" />]]></programlisting>
+        So the only thing you need to do is to add the DAO interfaces classes
+        in the correct package. No per-DAO configuration is needed.
+            </para>
+
+        </section>
+
+        <section xml:id="spring-hibernate-using-a-dao">
+            <title>Use the DAO</title>
+            <para>To use a DAO you simply need to get it from the Spring application
+            context. You could of course retrieve it by name from the context, using
+            its unqualified name. For example you could retrieve the
+                <classname>PersonDao</classname> throught the
+            "personDao" name. But the easiest way for obtaining a reference to a
+            DAO is to auto-wire it in a Spring managed bean.
+            </para>
+            <para>For example, for using the <classname>PersonDao</classname> in
+            a component of your Spring application:
+                <example>
+                    <title>A component using a DAO</title>
+                    <programlisting language="java"><![CDATA[package org.lambico.example.consolespringhibernate.bo;
+
+import javax.annotation.Resource;
+
+import org.lambico.example.consolespringhibernate.dao.PersonDao;
+import org.lambico.example.consolespringhibernate.po.Person;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
+@Component
+public class PersonBO {
+
+    @Resource
+    private PersonDao personDao;
+
+    @Transactional(readOnly = true)
+    public void printPerson(Long id) {
+        Person p = personDao.read(id);
+        if (p != null) {
+            System.out.println(p.getFirstName() + " " + p.getLastName() + " " +
+                    p.getBirthDate());
+        } else {
+            System.out.println("Person ("+id+") not found");
+        }
+    }
+}]]></programlisting>
+                </example>
+            </para>
+        </section>
+
+    </section>
+
+    <section xml:id="spring-hibernate-adding-finders">
+        <title>Add finder methods to the DAOs</title>
+
+        <para>The
+            <classname>GenericDao</classname> interface provides the base methods
+        you need for interacting with persistent entities. You will add to your DAO
+        interface the methods your application needs for finding the data in the database.
+        Again, you don't have to implements those methods, they will be solved at runtime
+        through Spring AOP, using some simple rules:
+        </para>
+
+        <orderedlist>
+            <listitem>
+                <para>if it exists a
+                    <emphasis>named query</emphasis> with name
+                    <code>&lt;entityName&gt;.methodName</code>, then execute that query
+            and return the result as the result of the method;
+                </para>
+            </listitem>
+            <listitem>
+                <para>else if the
+                    <emphasis>method name</emphasis> is in the form
+                    <code>findBy[&lt;And-separated list of attributes&gt;][OrderBy[&lt;And-separated list of attributes&gt;]</code>,
+            then the method signature is parsed for generating a query.
+            The generated query will be executed and the result will be returned as the result of the method;
+                </para>
+            </listitem>
+            <listitem>
+                <para>else call the method on the base DAO implementation.</para>
+            </listitem>
+        </orderedlist>
+
+        <para>The return type of the finder methods can be a
+            <classname>List&lt;T&gt;</classname>
+        or a single 
+            <classname>T</classname>, where
+            <classname>T</classname> is
+        the type of the persistent entity. In the case of single
+            <classname>T</classname>:
+        </para>
+
+        <itemizedlist>
+            <listitem>
+                <para>if the query will produce a single result, that result will be returned;</para>
+            </listitem>
+            <listitem>
+                <para>if the query will produce more than a single result, only the first one will be returned;</para>
+            </listitem>
+            <listitem>
+                <para>if the query will produce no results,
+                    <code>null will be returned.</code>
+                </para>
+            </listitem>
+        </itemizedlist>
+
+        <para>Some pratical examples will help you being very productive with this technique.</para>
+        
+        <section xml:id="spring-hibernate-finders-find-by-equality">
+            <title>Find by field equality</title>
+
+            <para>For example, you need to find all people with first name equals
+            to "John". Add to the interface the following method:
+
+                <programlisting language="java"><![CDATA[@Dao(entity=Person.class)
+public interface PersonDao extends GenericDao<Person, Long> {
+  List<Person> findByFirstName(String firstName);
+}]]></programlisting>
+
+            If the finder needs to compare on more fields, simply list them in
+            the method name separated by the “And” keyword:
+
+                <programlisting language="java"><![CDATA[
+@Dao(entity=Person.class)
+public interface PersonDao extends GenericDao<Person, Long> {
+  List<Person> findByFirstName(String firstName);
+  List<Person> findByFirstNameAndLastNameAndBirthDate(
+      String firstName, String lastName, Date birthDate);
+}]]></programlisting>
+            </para>
+
+        </section>
+
+        <section xml:id="spring-hibernate-finders-ordering">
+            <title>Ordering results</title>
+
+            <para>If you need to order (ascending) the results, declare a method
+            as the following:
+
+                <programlisting language="java"><![CDATA[@Dao(entity=Person.class)
+public interface PersonDao extends GenericDao<Person, Long> {
+  List<Person> findByBirthDateOrderByLastName(Date birthDate);
+}]]></programlisting>
+
+            Again, If you need to order on more than one field, list the fields
+            you need:
+
+                <programlisting language="java"><![CDATA[List<Person> findByBirthDateOrderByLastNameAndFirstName(Date birthDate);]]></programlisting>
+
+            If you don’t want to filter by equality, but the result must contains all records, omit the list of fields:
+
+                <programlisting language="java"><![CDATA[List<Person> findByOrderByLastNameAndFirstName();]]></programlisting>
+
+            </para>
+        </section>
+
+        <section xml:id="spring-hibernate-finders-single-object">
+            <title>Find a single object</title>
+
+            <para>Define the finder method returning the entity type, not a List:
+
+                <programlisting language="java"><![CDATA[Person findByFirstNameAndLastName(String firstName, String lastName);]]></programlisting>
+
+            If the query will produce more than one result, only the first one
+            in the list will be returned. If the query will produce no results,
+            the method will return null.
+            </para>
+        </section>
+
+        <section xml:id="spring-hibernate-finders-hql-query">
+            <title>Write the query in JPA-QL/HQL</title>
+
+            <para>You can write an JPA-QL/HQL query and add a method in the DAO
+            interface that will execute it when invoked. Declare the method as
+            you like in the DAO interface, and declare the query as a named query
+            in the DAO’s entity. The name of the query must be
+                <code>&lt;entityName&gt;.methodName</code>. The method parameters
+            are passed in the same order as values for the query parameters.
+            For example:
+
+                <programlisting language="java"><![CDATA[@Dao(entity=Person.class)
+public interface PersonDao extends GenericDao<Person, Long> {
+  List<Person> findByPartialUncasedLastName(String partialLastName);
+}]]></programlisting>
+
+
+                <programlisting language="java"><![CDATA[@Entity()
+@NamedQueries({
+  @NamedQuery(
+    name="Person.findByPartialUncasedLastName",
+    query="from Person p where lower(p.lastName) like lower(?) order by p.lastName")
+})
+public class Person extends EntityBase {
+  // ...
+}]]></programlisting>
+
+            Now You can invoke it:
+
+                <programlisting language="java"><![CDATA[List <Person> people = dao.findByPartialUncasedLastName("B%");]]></programlisting>
+            </para>
+        </section>
+
+        <section xml:id="spring-hibernate-finders-pagination">
+            <title>Methods with support for the pagination of results</title>
+
+            <para>You can annotate the finder method parameters with the
+                <classname>@FirstResult</classname> and
+                <classname>@MaxResults</classname> annotations. For example:
+
+                <programlisting language="java"><![CDATA[@Dao(entity=Person.class)
+public interface PersonDao extends GenericDao<Person, Long> {
+  List<Person> findByLastName(String lastName,
+                              @FirstResult int firstResult,
+                              @MaxResults int maxResults);
+}]]></programlisting>
+
+                The type of the annotate parameter must be
+                <type>int</type>. You can apply this technique to finder methods
+                associated to named queries, without the need to modify the query.
+                For example:
+
+                <programlisting language="java"><![CDATA[@Dao(entity=Person.class)
+public interface PersonDao extends GenericDao<Person, Long> {
+  List<Person> findByPartialUncasedLastName(String partialLastName,
+                                            @FirstResult int firstResult,
+                                            @MaxResults maxResults);
+}]]></programlisting>
+
+                <programlisting language="java"><![CDATA[@Entity()
+@NamedQueries({
+  @NamedQuery(
+    name="Person.findByPartialUncasedLastName",
+    query="from Person p where lower(p.lastName) like lower(?) order by p.lastName")
+})
+public class Person extends EntityBase {
+  // ...
+}]]></programlisting>
+
+                If there are situations in which you don’t want to limit the
+                number of records, you can pass a negative value for the
+                <parameter>maxRecords</parameter> parameter:
+
+                <programlisting language="java"><![CDATA[List<Person> people = dao.findByPartialUncasedLastName("B%", 0, -1);]]></programlisting>
+
+                It will return all records, from the first (0) to the end.
+            </para>
+        </section>
+
+        <section xml:id="spring-hibernate-finders-comparison-strategies">
+            <title>Using different strategies for comparing parameter values</title>
+
+            <para>In totally dynamic finders you can choose the type of the
+                comparison applied to each parameter using the
+                <classname>@Compare</classname> annotation. For example:
+
+                <programlisting language="java"><![CDATA[
+@Dao(entity=Person.class)
+public interface PersonDao extends GenericDao<Person, Long> {
+  List<Person> findByLastName(
+                 @Compare(CompareType.ILIKE) String lastName);
+}]]></programlisting>
+
+                The supported comparison strategies are:
+            </para>
+            <variablelist>
+                <varlistentry>
+                    <term>EQUAL</term>
+                    <listitem>equality, it’s the default</listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>LIKE</term>
+                    <listitem>like, using ’%’</listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>ILIKE</term>
+                    <listitem>case-insensitive like</listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>GE</term>
+                    <listitem>greater than or equal</listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>GT</term>
+                    <listitem>greater than</listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>LE</term>
+                    <listitem>less than or equal</listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>LT</term>
+                    <listitem>less than</listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>NE</term>
+                    <listitem>not equal</listitem>
+                </varlistentry>
+            </variablelist>
+        </section>
+
+    </section>
+
+    <section xml:id="spring-hibernate-search-with-criteria">
+        <title>Search with criteria</title>
+
+        <para>
+                Very complex queries can be implemented using criteria in place
+                of writing JPA-QL/HQL queries. This is particularly useful for
+                implementing search forms, where some or all parameters are optional.
+        </para>
+        <para>The methods of the Hibernate generic DAO that support this kind of queries are:
+            <programlisting><![CDATA[List<T> searchByCriteria(Criterion... criterion);
+List<T> searchByCriteria(DetachedCriteria criteria);
+List<T> searchByCriteria(DetachedCriteria criteria, int firstResult, int maxResults);
+Page<T> searchPaginatedByCriteria(int page, int pageSize, Criterion... criterion);
+Page<T> searchPaginatedByCriteria(int page, int pageSize, DetachedCriteria criteria);
+long countByCriteria(DetachedCriteria criteria);]]></programlisting>
+        </para>
+        <para>
+            For example:
+            <example>
+                <title>Searching using a
+                    <classname>DetachedCriteria</classname>
+                </title>
+                <programlisting language="java"><![CDATA[DetachedCriteria personCriteria =
+        DetachedCriteria.forClass(Person.class);
+if (StringUtils.isNotBlank(firstNameValue)) {
+    personCriteria.add(Restrictions.ilike("firstName",
+            firstNameValue, MatchMode.ANYWHERE));
+}
+if (StringUtils.isNotBlank(lastNameValue)) {
+    personCriteria.add(Restrictions.ilike("lastName",
+            lastNameValue, MatchMode.ANYWHERE));
+}
+List<Person> result = personDao.searchByCriteria(personCriteria);]]></programlisting>
+            </example>
+        </para>
+    </section>
+
+    <section xml:id="transaction-demarcation">
+        <title>Transaction demarcation</title>
+
+        <para>Without any additional configuration the transaction is identified
+        by the single DAO method call.
+        </para>
+
+        <para>You can rollback the current transaction calling the
+            <methodname>rollbackTransaction</methodname>
+        method of any DAO.
+        </para>
+    </section>
+</chapter>
