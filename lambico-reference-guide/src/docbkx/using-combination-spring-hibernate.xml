@@ -39,6 +39,189 @@
 
     </section>
 
+    <section xml:id="spring-hibernate-configuration">
+        <title>Configuration</title>
+
+        <para>
+            For starting using Lambico you must introduce in your Spring context the
+            configuration providing the infrastructure for the generic DAO system. It is
+            distributed as a resource in the Lambico JARs, so you'll find it in your classpath:
+            <filename>org/lambico/spring/dao/hibernate/genericDao.xml</filename>.
+        </para>
+
+        <para>
+            A base configuration for your application context is also provided at
+            <filename>org/lambico/spring/dao/hibernate/applicationContextBase.xml</filename>.
+            It mostly contains base configuration for things like the session factory and
+            the transaction manager, so, if your application context already fully provides
+            them, you could ignore it.
+        </para>
+
+        <para>Of course you'll need the configuration for your database connection.
+            For example:
+            <example>
+                <title>database.xml</title>
+                <programlisting language="xml"><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+    <tx:annotation-driven/>
+
+    <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+        <property name="driverClassName" value="org.hsqldb.jdbcDriver"/>
+        <property name="url" value="jdbc:hsqldb:mem:exampleDB"/>
+        <property name="username" value="sa"/>
+        <property name="password" value=""/>
+    </bean>
+
+    <bean id="sessionFactory" parent="abstractSessionFactory">
+        <property name="hibernateProperties">
+            <props  merge="true">
+                <!-- commented, as Hibernate should discover it by itself from the JDBC driver
+                  <prop key="hibernate.dialect">org.hibernate.dialect.HSQLDialect</prop>
+                -->
+                <prop key="hibernate.hbm2ddl.auto">update</prop>
+            </props>
+        </property>
+        <property name="eventListeners">
+            <map>
+                <entry key="merge">
+                    <bean class="org.springframework.orm.hibernate3.support.IdTransferringMergeEventListener"/>
+                </entry>
+            </map>
+        </property>
+    </bean>
+</beans>
+]]></programlisting>
+            </example>
+        </para>
+
+        <para>
+            Last you'll add the configuration of your application. For example:
+            <example>
+                <title>applicationContext.xml</title>
+                <programlisting language="xml"><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:lambico="http://www.lambico.org/schema/lambico"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.lambico.org/schema/lambico http://www.lambico.org/schema/lambico.xsd
+       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <context:component-scan base-package="org.lambico.example.consolespringhibernate.bo"/>
+    <!-- Authomatic discovering of persistent classes -->
+    <lambico:discover-persistent-classes basePackage="org.lambico.example.consolespringhibernate.po"/>
+    <!-- Authomatic DAO definition from persistent classes -->
+    <lambico:define-daos baseInterfacePackage="org.lambico.example.consolespringhibernate.dao" />
+
+</beans>
+]]></programlisting>
+            </example>
+            The example is supposing you'll put some components of your application
+            in the <code>org.lambico.example.consolespringhibernate.bo</code>,
+            the entity classes in the <code>org.lambico.example.consolespringhibernate.po</code>
+            package, and the DAO interfaces in the <code>org.lambico.example.consolespringhibernate.dao</code>
+            package.
+        </para>
+
+        <para>In a standalone application, you can load and manage your context
+            using the following class:
+            <example>
+                <title>ApplicationConextHolder.java</title>
+                <programlisting language="java"><![CDATA[package org.lambico.example.consolespringhibernate.util;
+
+import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
+import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.GenericApplicationContext;
+
+public class ApplicationContextHolder {
+
+    private static GenericApplicationContext context;
+
+    static {
+        context = new GenericApplicationContext();
+        new XmlBeanDefinitionReader(context).loadBeanDefinitions(
+                new String[]{
+                    "classpath:org/lambico/spring/dao/hibernate/genericDao.xml",
+                    "classpath:org/lambico/spring/dao/hibernate/applicationContextBase.xml",
+                    "classpath:database.xml",
+                    "classpath:applicationContext.xml"
+                });
+        context.refresh();
+    }
+
+    public static ApplicationContext getApplicationContext() {
+        return context;
+    }
+
+    public static void autowireBeanProperties(Object o) {
+        context.getBeanFactory().autowireBeanProperties(o,
+                AutowireCapableBeanFactory.AUTOWIRE_BY_TYPE, true);
+    }
+}]]></programlisting>
+            </example>
+        </para>
+
+        <para>
+            In a web application you'll probably add a context listener to
+            your <filename>web.xml</filename>. For example:
+            <example>
+                <title>ContextListener.java</title>
+                <programlisting language="java"><![CDATA[import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
+
+import javax.servlet.ServletContext;
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
+
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.context.support.XmlWebApplicationContext;
+
+public class ContextListener implements ServletContextListener {
+    private ServletContext servletContext;
+    private XmlWebApplicationContext applicationContext;
+
+    public void contextInitialized(ServletContextEvent evt) {
+        try {
+            this.servletContext = evt.getServletContext();
+            loadApplicationContext();
+        } catch (Exception e) {
+            // here some logging
+        }
+    }
+
+    private void loadApplicationContext() {
+        List<String> config = new ArrayList<String>();
+        config.add("classpath:org/lambico/spring/dao/hibernate/genericDao.xml");
+        config.add("classpath:org/lambico/spring/dao/hibernate/applicationContextBase.xml");
+        config.add("WEB-INF/database.xml");
+        config.add("WEB-INF/applicationContext.xml");
+        XmlWebApplicationContext ctx = new XmlWebApplicationContext();
+        ctx.setServletContext(servletContext);
+        ctx.setConfigLocations(config.toArray(new String[config.size()]));
+        ctx.refresh();
+
+        servletContext.setAttribute(WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE, ctx);
+        applicationContext = ctx;
+    }
+
+    public void contextDestroyed(ServletContextEvent evt) {
+    }
+
+}]]></programlisting>
+            </example>
+        </para>
+    </section>
+
     <section xml:id="spring-hibernate-persistent-entities">
         <title>Persistent entities</title>
 
