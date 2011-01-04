@@ -80,8 +80,7 @@
         </para>
         <programlisting language="java"><![CDATA[@Dao(entity=Person.class)
 public interface PersonDao extends GenericDao<Person, Long> {
-}]]>
-        </programlisting>
+}]]></programlisting>
         <para>You don't need to write anything else, your DAO will be instrumented
         at runtime with all the methods you can expect: read, create, delete,
         store, findAll, etc.
@@ -92,8 +91,7 @@ public interface PersonDao extends GenericDao<Person, Long> {
         <programlisting language="java"><![CDATA[@Dao(entity=Person.class)
 public interface PersonDao extends GenericDao<Person, Long> {
   List<Person> findByFirstName(String firstName);
-}]]>
-        </programlisting>
+}]]></programlisting>
         <para>The findByFirstName method will be instrumented exactly as you expect,
         querying the Person entity for all instances having the firstName property
         equal to the passed parameter.

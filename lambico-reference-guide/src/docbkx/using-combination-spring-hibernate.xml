@@ -76,8 +76,11 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:tx="http://www.springframework.org/schema/tx"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
-       http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
+       xsi:schemaLocation="
+            http://www.springframework.org/schema/beans
+            http://www.springframework.org/schema/beans/spring-beans.xsd
+            http://www.springframework.org/schema/tx
+            http://www.springframework.org/schema/tx/spring-tx.xsd">
 
     <tx:annotation-driven/>
 
@@ -100,7 +103,8 @@
         <property name="eventListeners">
             <map>
                 <entry key="merge">
-                    <bean class="org.springframework.orm.hibernate3.support.IdTransferringMergeEventListener"/>
+                    <bean class=
+                      "org.springframework.orm.hibernate3.support.IdTransferringMergeEventListener"/>
                 </entry>
             </map>
         </property>
@@ -121,18 +125,23 @@
        xmlns:context="http://www.springframework.org/schema/context"
        xmlns:lambico="http://www.lambico.org/schema/lambico"
        xsi:schemaLocation="
-       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
-       http://www.lambico.org/schema/lambico http://www.lambico.org/schema/lambico.xsd
-       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+            http://www.springframework.org/schema/beans
+            http://www.springframework.org/schema/beans/spring-beans.xsd
+            http://www.lambico.org/schema/lambico
+            http://www.lambico.org/schema/lambico.xsd
+            http://www.springframework.org/schema/context
+            http://www.springframework.org/schema/context/spring-context.xsd">
 
-    <context:component-scan base-package="org.lambico.example.consolespringhibernate.bo"/>
+    <context:component-scan
+        base-package="org.lambico.example.consolespringhibernate.bo"/>
     <!-- Authomatic discovering of persistent classes -->
-    <lambico:discover-persistent-classes basePackage="org.lambico.example.consolespringhibernate.po"/>
+    <lambico:discover-persistent-classes
+        basePackage="org.lambico.example.consolespringhibernate.po"/>
     <!-- Authomatic DAO definition from persistent classes -->
-    <lambico:define-daos baseInterfacePackage="org.lambico.example.consolespringhibernate.dao" />
+    <lambico:define-daos
+        baseInterfacePackage="org.lambico.example.consolespringhibernate.dao" />
 
-</beans>
-]]></programlisting>
+</beans>]]></programlisting>
             </example>
             The example is supposing you'll put some components of your application
             in the <code>org.lambico.example.consolespringhibernate.bo</code>,
@@ -220,7 +229,8 @@ public class ContextListener implements ServletContextListener {
         ctx.setConfigLocations(config.toArray(new String[config.size()]));
         ctx.refresh();
 
-        servletContext.setAttribute(WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE, ctx);
+        servletContext.setAttribute(
+            WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE, ctx);
         applicationContext = ctx;
     }
 
@@ -326,7 +336,8 @@ public class Person extends EntityBase {
 
         <para>The entities are auto-discovered using the following tag in
         your Spring configuration:
-            <programlisting language="xml"><![CDATA[<lambico:discover-persistent-classes basePackage="org.lambico.example.consolespringhibernate.po"/>]]></programlisting>
+            <programlisting language="xml"><![CDATA[<lambico:discover-persistent-classes
+    basePackage="org.lambico.example.consolespringhibernate.po"/>]]></programlisting>
         So the only thing you need to do is to add the entities classes in the correct package. No per-class configuration is needed.
         </para>
     </section>
@@ -631,8 +642,7 @@ public interface PersonDao extends GenericDao<Person, Long> {
             If the finder needs to compare on more fields, simply list them in
             the method name separated by the “And” keyword:
 
-                <programlisting language="java"><![CDATA[
-@Dao(entity=Person.class)
+                <programlisting language="java"><![CDATA[@Dao(entity=Person.class)
 public interface PersonDao extends GenericDao<Person, Long> {
   List<Person> findByFirstName(String firstName);
   List<Person> findByFirstNameAndLastNameAndBirthDate(
@@ -764,8 +774,7 @@ public class Person extends EntityBase {
                 comparison applied to each parameter using the
                 <classname>@Compare</classname> annotation. For example:
 
-                <programlisting language="java"><![CDATA[
-@Dao(entity=Person.class)
+                <programlisting language="java"><![CDATA[@Dao(entity=Person.class)
 public interface PersonDao extends GenericDao<Person, Long> {
   List<Person> findByLastName(
                  @Compare(CompareType.ILIKE) String lastName);
@@ -858,6 +867,84 @@ List<Person> result = personDao.searchByCriteria(personCriteria);]]></programlis
         <para>You can rollback the current transaction calling the
             <methodname>rollbackTransaction</methodname>
         method of any DAO.
+        </para>
+    </section>
+
+    <section xml:id="spring-hibernate-exception-management">
+        <title>Exception management</title>
+
+        <para>You can configure the strategy used for managing the
+        exeptions coming-out from the execution of the methods of the
+        DAOs. The default strategy simply logs and ignores them.</para>
+
+        <para>Another provided strategy re-throws the exceptions to the caller.
+        For activating it, add the following bean to your Spring configuration:
+            <programlisting><![CDATA[<bean id="daoExceptionManager"
+    class="org.lambico.dao.BypassingExceptionManager"/>]]></programlisting>
+        </para>
+
+        <para>Of course you can write your own strategy for managing exceptions,
+        simply extending the <code>org.lambico.dao.DaoExceptionManagerBase</code>,
+        overriding the <code>process(Throwable, Properties)</code> method.</para>
+    </section>
+
+    <section xml:id="spring-hibernate-cache-queries">
+        <title>Cache the queries</title>
+
+        <para>You can enable the caching of the queries produced by the
+        DAOs using the <code>CacheIt</code> annotation, both at the DAO interface
+        definition level, or at the DAO method definition level.
+        At the interface level it will enable the caching of queries for all the
+        methods of the base generic DAO. At the methods level it will enable the
+        caching of the query associated to that specific method.</para>
+        <para>
+            For example:
+            <example>
+                <title>A DAO with query caching</title>
+                <programlisting language="java"><![CDATA[package org.lambico.spring.dao.hibernate.dao;
+
+import java.util.List;
+import org.lambico.dao.generic.CacheIt;
+import org.lambico.dao.generic.Compare;
+import org.lambico.dao.generic.CompareType;
+import org.lambico.dao.generic.Dao;
+import org.lambico.dao.generic.GenericDao;
+import org.lambico.spring.dao.hibernate.po.CachedEntityTC;
+
+@Dao(entity = CachedEntityTC.class)
+@CacheIt
+public interface CachedEntityTCDao extends GenericDao<CachedEntityTC, Long> {
+
+    @CacheIt
+    List<CachedEntityTC> findByFieldOne(@Compare(CompareType.LIKE) String value);
+
+    @CacheIt
+    List<CachedEntityTC> findCacheByFieldTwo(String value);
+
+    List<CachedEntityTC> findNoCacheByFieldThree(String value);
+}]]></programlisting>
+            </example>
+            Note that the query of the <code>findNoCacheByFieldThree</code> method
+            of the previous example will not be cached.
+        </para>
+        <para>Of course you'll also have to configure the caching in Hibernate session
+        factory configuration. For example:
+        <programlisting><![CDATA[<bean id="sessionFactory"
+        class="org.springframework.orm.hibernate3.annotation.AnnotationSessionFactoryBean"
+        parent="abstractSessionFactory">
+    <property name="hibernateProperties">
+        <props>
+            <prop key="hibernate.hbm2ddl.auto">update</prop>
+            <prop key="hibernate.show_sql">false</prop>
+            <prop key="hibernate.cache.use_query_cache">true</prop>
+            <prop key="hibernate.cache.use_second_level_cache">true</prop>
+            <prop key="hibernate.cache.provider_class">
+                org.hibernate.cache.HashtableCacheProvider
+            </prop>
+            <prop key="hibernate.generate_statistics">true</prop>
+        </props>
+    </property>
+</bean>]]></programlisting>
         </para>
     </section>
 </chapter>
