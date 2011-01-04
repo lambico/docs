@@ -37,6 +37,16 @@
     implementation of the Java Persistence API (JPA).
         </para>
 
+        <para>Some complete examples are available in the
+        <link xlink:href="http://code.google.com/p/lambico/source/checkout?repo=examples">examples source code repository</link>:
+        <itemizedlist spacing="compact">
+            <listitem>
+                <para>
+                    <link xlink:href="http://code.google.com/p/lambico/source/browse/?repo=examples#hg%2FconsoleSpringHibernate">Console example</link>
+                </para>
+            </listitem>
+        </itemizedlist>
+        </para>
     </section>
 
     <section xml:id="spring-hibernate-configuration">
@@ -810,7 +820,7 @@ public interface PersonDao extends GenericDao<Person, Long> {
                 implementing search forms, where some or all parameters are optional.
         </para>
         <para>The methods of the Hibernate generic DAO that support this kind of queries are:
-            <programlisting><![CDATA[List<T> searchByCriteria(Criterion... criterion);
+            <programlisting language="java"><![CDATA[List<T> searchByCriteria(Criterion... criterion);
 List<T> searchByCriteria(DetachedCriteria criteria);
 List<T> searchByCriteria(DetachedCriteria criteria, int firstResult, int maxResults);
 Page<T> searchPaginatedByCriteria(int page, int pageSize, Criterion... criterion);
@@ -838,7 +848,7 @@ List<Person> result = personDao.searchByCriteria(personCriteria);]]></programlis
         </para>
     </section>
 
-    <section xml:id="transaction-demarcation">
+    <section xml:id="spring-hibernate-transaction-demarcation">
         <title>Transaction demarcation</title>
 
         <para>Without any additional configuration the transaction is identified
