@@ -31,7 +31,7 @@
     </info>
     <para>The starting point for using Lambico is adding it to your
             development project. In the following sections we will examine how
-            to add Lambico in a Maven based project.
+            to add Lambico in your projects.
     </para>
     <section xml:id="choose-your-lambico">
         <info>
@@ -91,5 +91,22 @@
                 </listitem>
             </itemizedlist>
         </para>
+    </section>
+    <section xml:id="add-lambico-without-maven">
+        <info>
+            <title>Without Maven</title>
+        </info>
+        <para>If you aren't using Maven for building your project, you'll have
+        to add to the classpath of your application the Lambico's JARs, and the JARs of
+        all the libraries Lambico depends from.</para>
+        <para>First of all, choose the Lambico combination that best fits your needs, and download
+        the "library" archive from the download area of the Lambico project site:
+            <itemizedlist>
+                <listitem>
+                    <para>Spring + Hibernate: <link xlink:href="http://code.google.com/p/lambico/downloads/detail?name=lambico-spring-hibernate-1.0-SNAPSHOT-library.zip">lambico-spring-hibernate-1.0-SNAPSHOT-library.zip</link></para>
+                </listitem>
+            </itemizedlist>
+        </para>
+        <para>Extract the JARs from the archive and add them to your project.</para>
     </section>
 </chapter>
